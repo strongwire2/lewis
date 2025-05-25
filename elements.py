@@ -16,7 +16,7 @@ def test_network():
     G = nx.Graph()
     G.add_node("X", label="Start", color="red")
     G.add_node("K")
-    G.add_edge("X", "A")
+    G.add_edge("X", "A") #없는 노드와 edge를 연결하면 노드를 만듦.
     G.add_edge("X", "K")
     pos = nx.spring_layout(G)  # 또는
     # pos = nx.kamada_kawai_layout(G)  # ,

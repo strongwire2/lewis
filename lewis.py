@@ -76,7 +76,7 @@ def combine_atoms(atoms, index, graph, result):
     재귀를 돌면서 그래프의 노드와 엣지를 연결함.
 
     :param atoms: ['H_0', 'H_1', 'O_0']
-    :param index: 몇번째 원소를 철리하고 있나
+    :param index: 몇번째 원소를 처리하고 있나
     :param graph: 그래프 객체
     :param result: 완성된 그래프를 담을 배열
     :return:
@@ -129,7 +129,7 @@ if __name__ == '__main__':
     #print(parse_formula("O2Cu2O4"))
     #print(flatten_atom_counts(parse_formula("O2Cu2O4")))
     result = []
-    traverse_lewis("OH2", result)
+    traverse_lewis("H2O", result)
     for r in result:
         dot = to_pydot(r)
         print(dot.to_string())

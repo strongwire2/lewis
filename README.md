@@ -11,6 +11,7 @@
   - `python -m venv venv`
   - `venv\Scripts\activate`
 - PyCharm에서 가상환경 만들고, 활성화
+  - https://www.jetbrains.com/ko-kr/pycharm/download/?section=windows#   ==> Community 버전 다운받을 것 
   - 파일 -> 설정 -> 프로젝트 -> Python 인터프리터 -> 인터프리터 추가 -> 로컬 인터프리터 추가 -> 새 인터프리터 
 - 필요한 라이브러리 설치하기 
   - `pip install -r requirements.txt`
