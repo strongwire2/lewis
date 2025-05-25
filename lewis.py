@@ -91,6 +91,8 @@ def traverse_lewis(formula, result):
         combine_atoms(perms, 0, graph, result)
 
 
+# https://dreampuf.github.io/GraphvizOnline  에서 확인
+
 if __name__ == '__main__':
     #print(parse_formula("H2O"))
     #print(parse_formula("Cu2O4"))
