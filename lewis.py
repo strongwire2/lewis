@@ -4,6 +4,18 @@ import networkx as nx
 from networkx.drawing.nx_pydot import to_pydot
 from itertools import permutations
 
+# 옥텟 룰 기준 전자 수
+ideal_valence_electrons = {
+    'H': 2, 'He': 2, 'B': 6, 'Be': 4, 'C': 8, 'N': 8, 'O': 8, 'F': 8,
+    'P': 8, 'S': 8, 'Cl': 8, 'Br': 8,
+}
+
+# 실제 원자가 전자 수 (free 상태)
+valence_electrons = {
+    'H': 1, 'He': 2, 'B': 3, 'Be': 2, 'C': 4, 'N': 5, 'O': 6, 'F': 7,
+    'P': 5, 'S': 6, 'Cl': 7, 'Br': 7,
+}
+
 
 def parse_formula(formula_str):
     """
@@ -60,6 +72,15 @@ def permutate_atoms(atoms):
 
 
 def combine_atoms(atoms, index, graph, result):
+    """
+    재귀를 돌면서 그래프의 노드와 엣지를 연결함.
+
+    :param atoms: ['H_0', 'H_1', 'O_0']
+    :param index: 몇번째 원소를 철리하고 있나
+    :param graph: 그래프 객체
+    :param result: 완성된 그래프를 담을 배열
+    :return:
+    """
     if index >= len(atoms):
         result.append(graph)
         return
@@ -70,7 +91,7 @@ def combine_atoms(atoms, index, graph, result):
         for node in graph.nodes:
             new_graph = graph.copy()
             new_graph.add_node(current_atom, label=current_atom.split('_')[0])
-            new_graph.add_edge(node, current_atom)
+            new_graph.add_edge(node, current_atom, bond=1)
             print(f"  add new {current_atom}, {node}-{current_atom}")
             combine_atoms(atoms, index+1, new_graph, result)
     else:
@@ -92,6 +113,14 @@ def traverse_lewis(formula, result):
         combine_atoms(perms, 0, graph, result)
 
 
+def verify_bond(graph):
+    """
+    Octet Rule을 만족하는지 검증하고, 필요하면 이중/삼중 결합으로 업데이트
+    """
+    for node in graph.nodes:
+        print(graph.nodes[node].get('label'))
+
+
 # https://dreampuf.github.io/GraphvizOnline  에서 확인
 
 if __name__ == '__main__':
@@ -104,5 +133,6 @@ if __name__ == '__main__':
     for r in result:
         dot = to_pydot(r)
         print(dot.to_string())
+        verify_bond(r)
 
     # print(permutate_atoms(['O_0', 'H_0', 'H_1']))
