@@ -1,7 +1,8 @@
 import re
-from collections import Counter
+from collections import Counter, defaultdict
 import networkx as nx
 from networkx.drawing.nx_pydot import to_pydot
+from itertools import permutations
 
 
 def parse_formula(formula_str):
@@ -28,6 +29,35 @@ def flatten_atom_counts(atom_counts):
     return flat_atoms
 
 
+def permutate_atoms(atoms):
+    """
+    ['O_0', 'H_0', 'H_1'] 이런 형식을 받아서 순열로 배치한 다음 중복을 제거하고 다시 번호를 붙임.
+
+    ('H', 'H', 'O') → ['H_0', 'H_1', 'O_0']
+    ('H', 'O', 'H') → ['H_0', 'O_0', 'H_1']
+    ('O', 'H', 'H') → ['O_0', 'H_0', 'H_1']
+    """
+    # 1. 원소 이름만 추출
+    elements = [a.split('_')[0] for a in atoms]  # ['O', 'H', 'H']
+    # 2. 원소 ID 목록을 그룹화 (예: {'O': ['O_0'], 'H': ['H_0', 'H_1']})
+    element_ids = defaultdict(list)  # defaultdict는 해당하는 key가 없을때 자동으로 초기화된 값을 리턴함
+    for atom in atoms:
+        symbol, index = atom.split('_')
+        element_ids[symbol].append(atom)
+    # 3. 가능한 순열 구하기 (중복 포함)
+    perms = set(permutations(elements))
+
+    perms_list = []
+    for p in sorted(perms):
+        counters = defaultdict(int)
+        result = []
+        for symbol in p:
+            result.append(element_ids[symbol][counters[symbol]])
+            counters[symbol] += 1
+        perms_list.append(result)
+
+    return perms_list
+
 def combine_atoms(atoms, index, graph, result):
     if index >= len(atoms):
         result.append(graph)
@@ -52,10 +82,13 @@ def combine_atoms(atoms, index, graph, result):
 def traverse_lewis(formula, result):
     atom_counts = parse_formula(formula)
     atoms = flatten_atom_counts(atom_counts)
-    graph = nx.Graph()
-    print(f"atoms = {atoms}")
-    combine_atoms(atoms, 0, graph, result)
 
+    perms_list = permutate_atoms(atoms)
+
+    for perms in perms_list:
+        graph = nx.Graph()
+        print(f"atoms = {perms}")
+        combine_atoms(perms, 0, graph, result)
 
 
 if __name__ == '__main__':
@@ -68,3 +101,5 @@ if __name__ == '__main__':
     for r in result:
         dot = to_pydot(r)
         print(dot.to_string())
+
+    # print(permutate_atoms(['O_0', 'H_0', 'H_1']))
