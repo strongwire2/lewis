@@ -58,6 +58,7 @@ def permutate_atoms(atoms):
 
     return perms_list
 
+
 def combine_atoms(atoms, index, graph, result):
     if index >= len(atoms):
         result.append(graph)
@@ -68,13 +69,13 @@ def combine_atoms(atoms, index, graph, result):
         print(f"attach {current_atom}")
         for node in graph.nodes:
             new_graph = graph.copy()
-            new_graph.add_node(current_atom)
+            new_graph.add_node(current_atom, label=current_atom.split('_')[0])
             new_graph.add_edge(node, current_atom)
             print(f"  add new {current_atom}, {node}-{current_atom}")
             combine_atoms(atoms, index+1, new_graph, result)
     else:
         new_graph = graph.copy()
-        new_graph.add_node(current_atom)
+        new_graph.add_node(current_atom, label=current_atom.split('_')[0])
         print(f"add new {current_atom}")
         combine_atoms(atoms, index+1, new_graph, result)
 
