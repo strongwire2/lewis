@@ -15,6 +15,7 @@
 - 필요한 라이브러리 설치하기 
   - `pip install -r requirements.txt`
 
-## test
-dd
+## 사용한 라이브러리
+- mendeleev: 원자들의 상세 정보 데이터베이스
+- networkx: 그래프 구조를 표현
 
