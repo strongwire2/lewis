@@ -1,5 +1,7 @@
 import re
 from collections import Counter
+import networkx as nx
+from networkx.drawing.nx_pydot import to_pydot
 
 
 def parse_formula(formula_str):
@@ -25,6 +27,23 @@ def flatten_atom_counts(atom_counts):
             flat_atoms.append(f"{symbol}_{i}")
     return flat_atoms
 
+
+def combine_atoms(atoms, index, graph, result):
+    current_atom = atoms[index]
+    if graph.nodes:
+        for node in graph.nodes:
+            pass
+    else:
+        graph.add_node(current_atom)
+
+
+def traverse_lewis(formula):
+    atom_counts = parse_formula(formula)
+    atoms = flatten_atom_counts(atom_counts)
+    result = []
+    graph = nx.Graph()
+
+    combine_atoms(atoms, 0, graph, result)
 
 if __name__ == '__main__':
     print(parse_formula("H2O"))
