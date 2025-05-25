@@ -29,24 +29,42 @@ def flatten_atom_counts(atom_counts):
 
 
 def combine_atoms(atoms, index, graph, result):
+    if index >= len(atoms):
+        result.append(graph)
+        return
+
     current_atom = atoms[index]
     if graph.nodes:
+        print(f"attach {current_atom}")
         for node in graph.nodes:
-            pass
+            new_graph = graph.copy()
+            new_graph.add_node(current_atom)
+            new_graph.add_edge(node, current_atom)
+            print(f"  add new {current_atom}, {node}-{current_atom}")
+            combine_atoms(atoms, index+1, new_graph, result)
     else:
-        graph.add_node(current_atom)
+        new_graph = graph.copy()
+        new_graph.add_node(current_atom)
+        print(f"add new {current_atom}")
+        combine_atoms(atoms, index+1, new_graph, result)
 
 
-def traverse_lewis(formula):
+def traverse_lewis(formula, result):
     atom_counts = parse_formula(formula)
     atoms = flatten_atom_counts(atom_counts)
-    result = []
     graph = nx.Graph()
-
+    print(f"atoms = {atoms}")
     combine_atoms(atoms, 0, graph, result)
 
+
+
 if __name__ == '__main__':
-    print(parse_formula("H2O"))
-    print(parse_formula("Cu2O4"))
-    print(parse_formula("O2Cu2O4"))
-    print(flatten_atom_counts(parse_formula("O2Cu2O4")))
+    #print(parse_formula("H2O"))
+    #print(parse_formula("Cu2O4"))
+    #print(parse_formula("O2Cu2O4"))
+    #print(flatten_atom_counts(parse_formula("O2Cu2O4")))
+    result = []
+    traverse_lewis("OH2", result)
+    for r in result:
+        dot = to_pydot(r)
+        print(dot.to_string())
