@@ -1,7 +1,8 @@
 import re
 from collections import Counter, defaultdict
 import networkx as nx
-from networkx.drawing.nx_pydot import to_pydot
+import pydot
+from networkx.drawing.nx_pydot import to_pydot, from_pydot
 from itertools import permutations
 
 # 옥텟 룰 기준 전자 수
@@ -175,7 +176,7 @@ def verify_bond(graph):
                 #print(f"TEST {u} -- {v}, data: {data}")
                 e_count += data.get("bond", 1)*2  # 공유 전자쌍이므로 연결당 2개의 전자임.
             # Octet Rule이 안맞으면 False 리턴
-            if e_count != ideal_valance:
+            if e_count != ideal_valance:  # octet rule 안맞으면
                 something_changed = False
                 for u, v, data in edges:
                     other = v if u == node else u  # edge에 연결된 상대편 other node를 구함
@@ -189,9 +190,26 @@ def verify_bond(graph):
                         something_changed = True  # 공유하는 등의 변화가 있으면 체크
                 if not something_changed:  # 변화 없으면 답이 없는 것임
                     #print("Nothing changed")
-                    break
+                    return False
             else:
                 break
+
+    # bond수 맞추는 과정에서 잘 맞추어 놓은 Octet Rule이 깨질 수 있으므로 다시 체크
+    for node in graph.nodes:
+        #print(graph.nodes[node].get('label'))
+        label = graph.nodes[node].get('label')  # 원소기호
+        #print(graph.edges(node))
+        ideal_valance = ideal_valence_electrons[label]  # 되어야 하는 원자가전자
+
+        # 남아있는 비공유 전자 개수와 edge의 bond 수를 합쳐서 Octet Rule을 만족하는지 확인
+        e_count = graph.nodes[node].get('lone_e')
+        edges = list(graph.edges(node, data=True))
+        for u, v, data in edges:
+            #print(f"TEST {u} -- {v}, data: {data}")
+            e_count += data.get("bond", 1)*2  # 공유 전자쌍이므로 연결당 2개의 전자임.
+        # Octet Rule이 안맞으면 False 리턴
+        if e_count != ideal_valance:  # octet rule 안맞으면
+            return False
 
     # 모든 원소에 대해 Octet Rule을 만족하므로 True 리턴
     return True
@@ -207,13 +225,25 @@ def get_lewis_struct(formular):
     structs = traverse_lewis(formular)
     verified = []
     for g in structs:
-        dot = to_pydot(g)
+        #dot = to_pydot(g)
         #print(dot.to_string())
 
         if verify_bond(g):
             verified.append(g)
     return verified
 
+def test_fail_case():
+    G = nx.Graph()
+    G.add_node("O_0", label="O", lone_e=4)
+    G.add_node("C_0", label="C", lone_e=3)
+    G.add_node("O_1", label="O", lone_e=5)
+    G.add_edge("O_0", "C_0", bond=1)
+    G.add_edge("O_0", "O_1", bond=1)
+
+    print(verify_bond(G))
+
+    dot = to_pydot(G)
+    print(dot.to_string())
 
 # https://dreampuf.github.io/GraphvizOnline  에서 확인
 
@@ -227,9 +257,13 @@ if __name__ == '__main__':
     #result = get_lewis_struct("CH4")  # 비선형
     result = get_lewis_struct("CO2")  # 이중 결합
     #result = get_lewis_struct("SO2")  # 확장옥텟
-    # result = get_lewis_struct("H2CO")  # 단일 결합+이중 결합, 포름알데히드
+    #result = get_lewis_struct("H2CO")  # 단일 결합+이중 결합, 포름알데히드
+
     for r in result:
         dot = to_pydot(r)
         print(dot.to_string())
+
+
+
 
 
