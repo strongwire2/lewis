@@ -1,15 +1,49 @@
-from mendeleev import element
+from mendeleev import element, get_all_elements
 from itertools import combinations
 import networkx as nx
 import matplotlib.pyplot as plt
 
 def test_elements():
-    elements_to_check = ['H', 'C', 'N', 'O', 'F', 'P', 'S', 'Cl', 'Na', 'Mg', 'Al', 'Si', 'He', 'Ar']
+    """
+    모든 원소에 대해 원자번호(전자수), 원자가전자수, 전기음성도 출력
+    :return:
+    """
+    # elements_to_check = ['H', 'C', 'N', 'O', 'F', 'P', 'S', 'Cl', 'Na', 'Mg', 'Al', 'Si', 'He', 'Ar']
 
-    for e in elements_to_check:
-        el = element(e)
+    for el in get_all_elements():
+        # el = element(e)
         # nvalence 원자가전자, en_pauling 전기음성도
         print(f"{el.symbol}: {el.atomic_number}, {el.nvalence()}, {el.en_pauling}")
+
+
+def print_elements_data():
+    """
+    원자가전자와 전기음성도에 대한 dict 출력. lewis.py 에서 사용
+    :return:
+    """
+    nvalence_dict = {}
+    en_pauling_dict = {}
+
+    for el in get_all_elements():
+        try:
+            nval = el.nvalence()
+        except Exception:
+            nval = None
+        en = el.en_pauling
+
+        nvalence_dict[el.symbol] = nval
+        en_pauling_dict[el.symbol] = en
+
+    # 결과 출력
+    print("nvalence_dict = {")
+    for k, v in nvalence_dict.items():
+        print(f"    '{k}': {v},")
+    print("}")
+
+    print("\nen_pauling_dict = {")
+    for k, v in en_pauling_dict.items():
+        print(f"    '{k}': {v},")
+    print("}")
 
 
 def test_network():
@@ -37,5 +71,6 @@ def test_network():
 
 
 if __name__ == '__main__':
-    test_elements()
-    test_network()
+    # test_elements()
+    # test_network()
+    print_elements_data()
