@@ -1,7 +1,7 @@
 # lewis
 루이스 전자점 구조를 계산
 
-## 환경 설정 
+## 환경 설정 (최초 1번만 하면 됨)
 - Python 최신 버전 설치하기 (버전 3.XX): https://www.python.org/downloads/windows/
 - git 설치하기: https://git-scm.com/download/win
 - 적당한 위치로 디렉토리 이동 후, 소스코드 다운받기
@@ -13,7 +13,7 @@
 - PyCharm에서 가상환경 만들고, 활성화
   - https://www.jetbrains.com/ko-kr/pycharm/download/?section=windows#   ==> Community 버전 다운받을 것 
   - 파일 -> 설정 -> 프로젝트 -> Python 인터프리터 -> 인터프리터 추가 -> 로컬 인터프리터 추가 -> 새 인터프리터 
-- 필요한 라이브러리 설치하기 
+- 필요한 라이브러리 모두 설치하기 (왼쪽 아래의 >_ 모양 아이콘 클릭하면 커맨드 창이 뜸. (.venv) 모양 확인할 것) 
   - `pip install -r requirements.txt`
 
 ## 사용한 라이브러리
