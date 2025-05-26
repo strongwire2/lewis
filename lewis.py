@@ -184,14 +184,18 @@ def verify_bond(graph):
 def get_lewis_struct(formular):
     """
     주어진 화학식으로 lewis 구조를 만들고, Octet Rule이 만족하는 구조를 Graph의 list로 리턴
+
     :param formular: 화학식 "H2O"의 형식
     :return: Octet Rule을 만족하는 Graph의 list
     """
     structs = traverse_lewis(formular)
     verified = []
-    for r in structs:
-        if verify_bond(r):
-            verified.append(r)
+    for g in structs:
+        dot = to_pydot(g)
+        print(dot.to_string())
+
+        if verify_bond(g):
+            verified.append(g)
     return verified
 
 
@@ -202,7 +206,9 @@ if __name__ == '__main__':
     #print(parse_formula("Cu2O4"))
     #print(parse_formula("O2Cu2O4"))
     #print(flatten_atom_counts(parse_formula("O2Cu2O4")))
-    result = get_lewis_struct("H2O")
+
+    #result = get_lewis_struct("H2O")  # 단일 결합
+    result = get_lewis_struct("CO2")  # 이중 결합
     for r in result:
         dot = to_pydot(r)
         print(dot.to_string())
