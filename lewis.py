@@ -100,37 +100,49 @@ def permutate_atoms(atoms):
     return perms_list
 
 
-def combine_atoms(atoms, index, graph, result):
+def combine_atoms(atoms, index, graph, structs):
     """
     재귀를 돌면서 그래프의 노드와 엣지를 연결함.
 
     :param atoms: ['H_0', 'H_1', 'O_0']
     :param index: 몇번째 원소를 처리하고 있나
     :param graph: 그래프 객체
-    :param result: 완성된 그래프를 담을 배열
+    :param structs: 완성된 그래프를 담을 배열
     :return:
     """
     if index >= len(atoms):
-        result.append(graph)
+        structs.append(graph)
         return
 
     current_atom = atoms[index]
     if graph.nodes:
-        print(f"attach {current_atom}")
+        #print(f"attach {current_atom}")
         for node in graph.nodes:
             new_graph = graph.copy()
-            new_graph.add_node(current_atom, label=current_atom.split('_')[0])
+            label = current_atom.split('_')[0]
+            # 단일 결합으로 가정하고 추가되는 노드의 비공유전자 1개 줄임
+            new_graph.add_node(current_atom, label=label, lone_e=valence_electrons.get(label, 0)-1)
+            # 연결 추가
             new_graph.add_edge(node, current_atom, bond=1)
-            print(f"  add new {current_atom}, {node}-{current_atom}")
-            combine_atoms(atoms, index+1, new_graph, result)
+            # 추가되는 노드와 연결되는 노드의 비공유전자 1개 줄임
+            new_graph.nodes[node]['lone_e'] = new_graph.nodes[node].get('lone_e', 0)-1
+            #print(f"  add new {current_atom}, {node}-{current_atom}")
+            combine_atoms(atoms, index+1, new_graph, structs)
     else:
         new_graph = graph.copy()
-        new_graph.add_node(current_atom, label=current_atom.split('_')[0])
-        print(f"add new {current_atom}")
-        combine_atoms(atoms, index+1, new_graph, result)
+        label = current_atom.split('_')[0]
+        new_graph.add_node(current_atom, label=label, lone_e=valence_electrons.get(label, 0))
+        #print(f"add new {current_atom}")
+        combine_atoms(atoms, index+1, new_graph, structs)
 
 
-def traverse_lewis(formula, result):
+def traverse_lewis(formula):
+    """
+    화학식에서 원자를 분리한 다음, 순열(perms_list)을 만들고, combine_atoms를 호출하여
+    :param formula: "H2O"와 같은 화학식
+    :return: 모든 조합의 lewis 구조 Graph
+    """
+    structs = []
     atom_counts = parse_formula(formula)
     atoms = flatten_atom_counts(atom_counts)
 
@@ -138,22 +150,49 @@ def traverse_lewis(formula, result):
 
     for perms in perms_list:
         graph = nx.Graph()
-        print(f"atoms = {perms}")
-        combine_atoms(perms, 0, graph, result)
+        # print(f"atoms = {perms}")
+        combine_atoms(perms, 0, graph, structs)
+    return structs
 
 
 def verify_bond(graph):
     """
     Octet Rule을 만족하는지 검증하고, 필요하면 이중/삼중 결합으로 업데이트
+
+    :return True이면 Octet Rule 만족, False이면 만족하지 않음
     """
     for node in graph.nodes:
-        print(graph.nodes[node].get('label'))
+        #print(graph.nodes[node].get('label'))
         label = graph.nodes[node].get('label')  # 원소기호
-        print(graph.edges(node))
-        nvalance = valence_electrons[label]  # 해당 원소의 원자가 전자
-        print(nvalance)
-        valance_tobe = ideal_valence_electrons[label]  # 되어야 하는 원자가전자
+        #print(graph.edges(node))
+        ideal_valance = ideal_valence_electrons[label]  # 되어야 하는 원자가전자
 
+        # 남아있는 비공유 전자 개수와 edge의 bond 수를 합쳐서 Octet Rule을 만족하는지 확인
+        e_count = graph.nodes[node].get('lone_e')
+        edges = list(graph.edges(node, data=True))
+        for u, v, data in edges:
+            # print(f"{u} -- {v}, data: {data}")
+            e_count += data.get("bond", 1)*2  # 공유 전자쌍이므로 연결당 2개의 전자임.
+        # Octet Rule이 안맞으면 False 리턴
+        if e_count != ideal_valance:
+            return False
+
+    # 모든 원소에 대해 Octet Rule을 만족하므로 True 리턴
+    return True
+
+
+def get_lewis_struct(formular):
+    """
+    주어진 화학식으로 lewis 구조를 만들고, Octet Rule이 만족하는 구조를 Graph의 list로 리턴
+    :param formular: 화학식 "H2O"의 형식
+    :return: Octet Rule을 만족하는 Graph의 list
+    """
+    structs = traverse_lewis(formular)
+    verified = []
+    for r in structs:
+        if verify_bond(r):
+            verified.append(r)
+    return verified
 
 
 # https://dreampuf.github.io/GraphvizOnline  에서 확인
@@ -163,11 +202,9 @@ if __name__ == '__main__':
     #print(parse_formula("Cu2O4"))
     #print(parse_formula("O2Cu2O4"))
     #print(flatten_atom_counts(parse_formula("O2Cu2O4")))
-    result = []
-    traverse_lewis("H2O", result)
+    result = get_lewis_struct("H2O")
     for r in result:
         dot = to_pydot(r)
         print(dot.to_string())
-        verify_bond(r)
 
-    # print(permutate_atoms(['O_0', 'H_0', 'H_1']))
+
