@@ -167,15 +167,31 @@ def verify_bond(graph):
         #print(graph.edges(node))
         ideal_valance = ideal_valence_electrons[label]  # 되어야 하는 원자가전자
 
-        # 남아있는 비공유 전자 개수와 edge의 bond 수를 합쳐서 Octet Rule을 만족하는지 확인
-        e_count = graph.nodes[node].get('lone_e')
-        edges = list(graph.edges(node, data=True))
-        for u, v, data in edges:
-            # print(f"{u} -- {v}, data: {data}")
-            e_count += data.get("bond", 1)*2  # 공유 전자쌍이므로 연결당 2개의 전자임.
-        # Octet Rule이 안맞으면 False 리턴
-        if e_count != ideal_valance:
-            return False
+        while True:
+            # 남아있는 비공유 전자 개수와 edge의 bond 수를 합쳐서 Octet Rule을 만족하는지 확인
+            e_count = graph.nodes[node].get('lone_e')
+            edges = list(graph.edges(node, data=True))
+            for u, v, data in edges:
+                #print(f"TEST {u} -- {v}, data: {data}")
+                e_count += data.get("bond", 1)*2  # 공유 전자쌍이므로 연결당 2개의 전자임.
+            # Octet Rule이 안맞으면 False 리턴
+            if e_count != ideal_valance:
+                something_changed = False
+                for u, v, data in edges:
+                    other = v if u == node else u  # edge에 연결된 상대편 other node를 구함
+                    #print(f"{node} -- {other}, data: {data}")
+                    if graph.nodes[other].get('lone_e') > 0 and graph.nodes[node].get('lone_e') > 0:  # 공유할 전자가 있으면
+                        #print(f"adjust {graph.nodes[node].get('lone_e')} - {graph.nodes[other].get('lone_e')}")
+                        graph.nodes[other]['lone_e'] = graph.nodes[other].get('lone_e')-1
+                        graph.nodes[node]['lone_e'] = graph.nodes[node].get('lone_e')-1
+                        #print(f"==> after {graph.nodes[node].get('lone_e')} - {graph.nodes[other].get('lone_e')}")
+                        graph[node][other]['bond'] = graph[node][other].get('bond', 1) + 1
+                        something_changed = True  # 공유하는 등의 변화가 있으면 체크
+                if not something_changed:  # 변화 없으면 답이 없는 것임
+                    #print("Nothing changed")
+                    break
+            else:
+                break
 
     # 모든 원소에 대해 Octet Rule을 만족하므로 True 리턴
     return True
@@ -192,7 +208,7 @@ def get_lewis_struct(formular):
     verified = []
     for g in structs:
         dot = to_pydot(g)
-        print(dot.to_string())
+        #print(dot.to_string())
 
         if verify_bond(g):
             verified.append(g)
@@ -208,7 +224,10 @@ if __name__ == '__main__':
     #print(flatten_atom_counts(parse_formula("O2Cu2O4")))
 
     #result = get_lewis_struct("H2O")  # 단일 결합
+    #result = get_lewis_struct("CH4")  # 비선형
     result = get_lewis_struct("CO2")  # 이중 결합
+    #result = get_lewis_struct("SO2")  # 확장옥텟
+    # result = get_lewis_struct("H2CO")  # 단일 결합+이중 결합, 포름알데히드
     for r in result:
         dot = to_pydot(r)
         print(dot.to_string())
