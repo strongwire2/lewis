@@ -246,6 +246,21 @@ def get_lewis_struct(formular):
             verified.append(g)
     return verified
 
+
+def annotate_lewis(graph):
+    """
+    DOT 그래프에서 노드 위에 비공유 전자 개수 출력하고(xlabel), 엣지에는 2중, 3중 결합 표시 추가
+    :param graph:
+    :return:
+    """
+    for node in graph.nodes:
+        if graph.nodes[node].get("lone_e") > 0:  # 비공유 전자 개수 표시
+            graph.nodes[node]['xlabel'] = graph.nodes[node].get("lone_e")
+    for u, v, data in graph.edges(data=True):
+        if data.get("bond") > 1:
+            graph[u][v]['label'] = data.get("bond")
+
+
 def test_fail_case():
     G = nx.Graph()
     G.add_node("O_0", label="O", lone_e=4)
@@ -267,13 +282,14 @@ if __name__ == '__main__':
     #print(parse_formula("O2Cu2O4"))
     #print(flatten_atom_counts(parse_formula("O2Cu2O4")))
 
-    #result = get_lewis_struct("H2O")  # 단일 결합
+    result = get_lewis_struct("H2O")  # 단일 결합
     #result = get_lewis_struct("CH4")  # 비선형
     #result = get_lewis_struct("CO2")  # 이중 결합
     #result = get_lewis_struct("SO2")  # 확장옥텟
     #result = get_lewis_struct("H2CO")  # 단일 결합+이중 결합, 포름알데히드
     #result = get_lewis_struct("CNO")  # 단일 결합+이중 결합, 포름알데히드
-    result = get_lewis_struct("C2H2")  # 단일 결합+이중 결합, 포름알데히드
+    #result = get_lewis_struct("C2H2")  # 단일 결합+이중 결합, 포름알데히드
     for r in result:
+        annotate_lewis(r)
         dot = to_pydot(r)
         print(dot.to_string())
