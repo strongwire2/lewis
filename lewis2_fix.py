@@ -167,7 +167,7 @@ def traverse_lewis(formula):
         combine_atoms(perms, 0, graph, structs)
     return structs
 
-
+'''
 def verify_bond(graph):
     """
     Octet Rule을 만족하는지 검증하고, 필요하면 이중/삼중 결합으로 업데이트
@@ -225,8 +225,92 @@ def verify_bond(graph):
 
     # 모든 원소에 대해 Octet Rule을 만족하므로 True 리턴
     return True
+'''
 
+def formal_charge(graph):
+    for node in graph.nodes:
+        fc_list = []
+        V = graph.nodes[node].get(valence_electrons['label'])
+        N = graph.nodes[node].get('lone_e')
+        B = cal_B()
 
+        fc = V - (N + B)
+        fc_list.append(fc)
+
+    return fc_list
+
+def cal_B(dot_string: str) -> dict: #B의 값을 계산하는 함수
+    # 정규 표현식으로 노드와 간선 추출
+    node_pattern = r'(\w+)\s+label=(\w+),\s+lone_e=(\d+)'
+    edge_pattern = r'(\w+)\s+--\s+(\w+)\s+bond=(\d+)'
+
+    nodes = re.findall(node_pattern, dot_string)
+    edges = re.findall(edge_pattern, dot_string)
+
+    # 그래프 생성
+    G = nx.Graph()
+
+    for node_id, label, lone_e in nodes:
+        G.add_node(node_id, element=label, lone_e=int(lone_e))
+
+    for n1, n2, bond in edges:
+        G.add_edge(n1, n2, bond=int(bond))
+
+    # 각 노드의 총 결합 차수 계산
+    bond_counts = {
+        node: sum(G.edges[node, neighbor]['bond'] for neighbor in G.neighbors(node))
+        for node in G.nodes
+    }
+
+    return bond_counts
+
+'''
+def verify_bond(graph):
+    for node in graph.nodes:
+        label = graph.nodes[node].get('label')
+        ideal_valance = ideal_valence_electrons.get(label, 0)
+
+        # 반복적으로 결합을 추가하여 옥텟 만족 시도
+        while True:
+            e_count = graph.nodes[node].get('lone_e', 0)
+            edges = list(graph.edges(node, data=True))
+
+            # 현재 전자 수 계산
+            for u, v, data in edges:
+                e_count += data.get("bond", 1) * 2
+
+            # 목표 전자 수 달성 시 루프 탈출
+            if e_count == ideal_valance:
+                break
+
+            # 추가 결합이 가능한지 확인
+            something_changed = False
+            for u, v, data in edges:
+                other = v if u == node else u
+                # 양쪽 모두 결합 가능한 여유 전자가 있는 경우
+                if graph.nodes[other].get('lone_e', 0) > 0 and graph.nodes[node].get('lone_e', 0) > 0:
+                    graph.nodes[other]['lone_e'] -= 1
+                    graph.nodes[node]['lone_e'] -= 1
+                    graph[u][v]['bond'] += 1  # 단일 → 이중 → 삼중으로 점진적 증가
+                    something_changed = True
+                    break  # 하나씩만 증가 후 다시 검토
+
+            # 더 이상 결합 추가 불가능 → 실패
+            if not something_changed:
+                return False
+
+    # 마지막 유효성 검사
+    for node in graph.nodes:
+        label = graph.nodes[node].get('label')
+        ideal_valance = ideal_valence_electrons.get(label, 0)
+        e_count = graph.nodes[node].get('lone_e', 0)
+        for u, v, data in graph.edges(node, data=True):
+            e_count += data.get("bond", 1) * 2
+        if e_count != ideal_valance:
+            return False
+
+    return True
+'''
 def get_lewis_struct(formular):
     """
     주어진 화학식으로 lewis 구조를 만들고, Octet Rule이 만족하는 구조를 Graph의 list로 리턴
@@ -243,6 +327,7 @@ def get_lewis_struct(formular):
         if verify_bond(g):
             verified.append(g)
     return verified
+'''
 
 def test_fail_case():
     G = nx.Graph()
@@ -267,7 +352,7 @@ if __name__ == '__main__':
 
     #result = get_lewis_struct("H2O")  # 단일 결합
     #result = get_lewis_struct("CH4")  # 비선형
-    result = get_lewis_struct("O3")  # 이중 결합
+    result = get_lewis_struct("HCOOH")  # 이중 결합
     #result = get_lewis_struct("SO2")  # 확장옥텟
     #result = get_lewis_struct("H2CO")  # 단일 결합+이중 결합, 포름알데히드
 
