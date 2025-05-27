@@ -267,10 +267,11 @@ if __name__ == '__main__':
 
     #result = get_lewis_struct("H2O")  # 단일 결합
     #result = get_lewis_struct("CH4")  # 비선형
-    result = get_lewis_struct("CH4")  # 이중 결합
+    #result = get_lewis_struct("CO2")  # 이중 결합
     #result = get_lewis_struct("SO2")  # 확장옥텟
     #result = get_lewis_struct("H2CO")  # 단일 결합+이중 결합, 포름알데히드
-
+    #result = get_lewis_struct("CNO")  # 단일 결합+이중 결합, 포름알데히드
+    result = get_lewis_struct("C2H2")  # 단일 결합+이중 결합, 포름알데히드
     for r in result:
         dot = to_pydot(r)
         print(dot.to_string())

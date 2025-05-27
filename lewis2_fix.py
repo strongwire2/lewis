@@ -227,12 +227,21 @@ def verify_bond(graph):
     return True
 '''
 
+
 def formal_charge(graph):
+    fc_list = []
     for node in graph.nodes:
-        fc_list = []
-        V = graph.nodes[node].get(valence_electrons['label'])
-        N = graph.nodes[node].get('lone_e')
-        B = cal_B()
+        label = graph.nodes[node].get('label')
+        V = graph.nodes[node].get(valence_electrons[label])
+        N = graph.nodes[node].get('lone_e', 0)
+
+        # node에 연결된 edge를 모두 구함.
+        edges = list(graph.edges(node, data=True))
+        bond_count = 0  # bond의 수를 합한다.
+        for u, v, data in edges:
+            # print(f"TEST {u} -- {v}, data: {data}")
+            bond_count += data.get("bond", 1)
+        B = bond_count
 
         fc = V - (N + B)
         fc_list.append(fc)
@@ -264,7 +273,7 @@ def cal_B(dot_string: str) -> dict: #B의 값을 계산하는 함수
 
     return bond_counts
 
-'''
+
 def verify_bond(graph):
     for node in graph.nodes:
         label = graph.nodes[node].get('label')
@@ -310,7 +319,8 @@ def verify_bond(graph):
             return False
 
     return True
-'''
+
+
 def get_lewis_struct(formular):
     """
     주어진 화학식으로 lewis 구조를 만들고, Octet Rule이 만족하는 구조를 Graph의 list로 리턴
@@ -327,7 +337,7 @@ def get_lewis_struct(formular):
         if verify_bond(g):
             verified.append(g)
     return verified
-'''
+
 
 def test_fail_case():
     G = nx.Graph()
@@ -343,6 +353,7 @@ def test_fail_case():
     print(dot.to_string())
 
 # https://dreampuf.github.io/GraphvizOnline  에서 확인
+
 
 if __name__ == '__main__':
     #print(parse_formula("H2O"))
