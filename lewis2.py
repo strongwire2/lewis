@@ -267,7 +267,7 @@ if __name__ == '__main__':
 
     #result = get_lewis_struct("H2O")  # 단일 결합
     #result = get_lewis_struct("CH4")  # 비선형
-    result = get_lewis_struct("O3")  # 이중 결합
+    result = get_lewis_struct("CH4")  # 이중 결합
     #result = get_lewis_struct("SO2")  # 확장옥텟
     #result = get_lewis_struct("H2CO")  # 단일 결합+이중 결합, 포름알데히드
 
