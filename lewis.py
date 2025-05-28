@@ -261,6 +261,37 @@ def annotate_lewis(graph):
             graph[u][v]['label'] = data.get("bond")
 
 
+def are_graphs_equivalent(g1, g2):
+    """
+    두 그래프가 같은지 비교함. Node는 ID가 아니라 label을 기준으로 하고, Edge는 bond 수를 고려함.
+    정확하지 않음... 수정 필요.
+
+    :param g1:
+    :param g2:
+    :return:
+    """
+    # 1. 노드 label 수 비교
+    def get_node_labels(graph):
+        return sorted([data["label"] for _, data in graph.nodes(data=True)])
+
+    if get_node_labels(g1) != get_node_labels(g2):
+        return False
+
+    # 2. edge: (label1, label2, bond) 기준 정렬 비교
+    def get_edge_signatures(graph):
+        sigs = []
+        for u, v, data in graph.edges(data=True):
+            label_u = graph.nodes[u]["label"]
+            label_v = graph.nodes[v]["label"]
+            bond = data.get("bond", 1)
+            # 순서 무관하게 처리
+            sig = tuple(sorted([label_u, label_v]) + [bond])
+            sigs.append(sig)
+        return sorted(sigs)
+
+    return get_edge_signatures(g1) == get_edge_signatures(g2)
+
+
 def test_fail_case():
     G = nx.Graph()
     G.add_node("O_0", label="O", lone_e=4)
@@ -293,3 +324,5 @@ if __name__ == '__main__':
         annotate_lewis(r)
         dot = to_pydot(r)
         print(dot.to_string())
+
+    print(are_graphs_equivalent(result[0], result[1]))
