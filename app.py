@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, Response
+from networkx.drawing.nx_pydot import to_pydot
 
 # Flask 애플리케이션 객체 생성
 app = Flask(__name__)
@@ -25,21 +26,17 @@ def lewis():
     formula = request.args.get('formula')
     print(f"lewis request for {formula}")
 
-    dot_string = """
-strict graph {
-H_0 [label=H, lone_e=0];
-C_0 [label=C, lone_e=0];
-H_1 [label=H, lone_e=0];
-C_1 [label=C, lone_e=0];
-H_2 [label=H, lone_e=0];
-H_3 [label=H, lone_e=0];
-H_0 -- C_0 [bond=1];
-C_0 -- H_1 [bond=1];
-C_0 -- C_1 [bond=2, label=2];
-C_1 -- H_2 [bond=1];
-C_1 -- H_3 [bond=1];
-}
-    """
+    # TODO: 여기서 버전을 바꿀 수 있음. lewis 대신 lewis_fix 등.
+    from lewis import get_lewis_struct, annotate_lewis
+
+    result = get_lewis_struct(formula)
+
+    dot_string = ''
+    # TODO: 일단 첫번째 거만 취하자.
+    if len(result) > 0:
+        annotate_lewis(result[0])
+        dot = to_pydot(result[0])
+        dot_string = dot.to_string()
 
     return Response(dot_string, mimetype='text/plain')
 
