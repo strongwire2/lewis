@@ -1,0 +1,40 @@
+<head>
+  <meta charset="utf-8">
+  <script src="https://unpkg.com/viz.js@2.1.2/viz.js"></script>
+  <!-- Rendering engine -->
+  <script src="https://unpkg.com/viz.js@2.1.2/full.render.js"></script>
+
+</head>
+<body>
+<h1>Lewis Dot Structure</h1>
+<div id="graph">
+</div>
+
+<script>
+    const dot = `
+strict graph {
+H_0 [label=H, lone_e=0];
+C_0 [label=C, lone_e=0];
+H_1 [label=H, lone_e=0];
+C_1 [label=C, lone_e=0];
+H_2 [label=H, lone_e=0];
+H_3 [label=H, lone_e=0];
+H_0 -- C_0 [bond=1];
+C_0 -- H_1 [bond=1];
+C_0 -- C_1 [bond=2, label=2];
+C_1 -- H_2 [bond=1];
+C_1 -- H_3 [bond=1];
+}
+`;
+
+  const viz = new Viz();
+  viz.renderSVGElement(dot, {engine: "neato"})
+    .then(function (element) {
+      document.getElementById("graph").appendChild(element);
+    })
+    .catch(error => {
+      console.error(error);
+    });
+
+</script>
+</body>

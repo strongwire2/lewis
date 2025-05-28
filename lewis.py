@@ -335,17 +335,17 @@ if __name__ == '__main__':
 
     # result = get_lewis_struct("O2") # 이중 결합
     # result = get_lewis_struct("CO2")
-    # result = get_lewis_struct("C2H4")
+    result = get_lewis_struct("C2H4")
     # result = get_lewis_struct("CH2O")
     # result = get_lewis_struct("HCN")
     # result = get_lewis_struct("CS2")
 
     #result = get_lewis_struct("SF4") #확장된 옥텟
-    result = get_lewis_struct("CS2")
+    #result = get_lewis_struct("CS2")
 
     for r in result:
         annotate_lewis(r)
         dot = to_pydot(r)
         print(dot.to_string())
 
-    print(are_graphs_equivalent(result[0], result[1]))
+    #print(are_graphs_equivalent(result[0], result[1]))
