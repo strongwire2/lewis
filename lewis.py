@@ -255,7 +255,8 @@ def annotate_lewis(graph):
     """
     for node in graph.nodes:
         if graph.nodes[node].get("lone_e") > 0:  # 비공유 전자 개수 표시
-            graph.nodes[node]['xlabel'] = graph.nodes[node].get("lone_e")
+            # graph.nodes[node]['xlabel'] = graph.nodes[node].get("lone_e")  # edge의 숫자랑 헷갈림. 그래서 node label에 표시하기로 함.
+            graph.nodes[node]['label'] = f"{graph.nodes[node].get('label')}:{graph.nodes[node].get('lone_e')}"
     for u, v, data in graph.edges(data=True):
         if data.get("bond") > 1:
             graph[u][v]['label'] = data.get("bond")
