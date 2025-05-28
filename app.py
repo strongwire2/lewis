@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, Response
 
 # Flask 애플리케이션 객체 생성
 app = Flask(__name__)
@@ -14,6 +14,34 @@ def index():
     # templates 폴더의 index.html 파일을 렌더링하여 반환
     # messages 리스트를 템플릿에 전달
     return render_template('index.html')
+
+
+@app.route('/lewis')
+def lewis():
+    """
+    루이스 구조를 구하고 리턴합니다. 일단은 dot 포맷
+    :return:
+    """
+    formula = request.args.get('formula')
+    print(f"lewis request for {formula}")
+
+    dot_string = """
+strict graph {
+H_0 [label=H, lone_e=0];
+C_0 [label=C, lone_e=0];
+H_1 [label=H, lone_e=0];
+C_1 [label=C, lone_e=0];
+H_2 [label=H, lone_e=0];
+H_3 [label=H, lone_e=0];
+H_0 -- C_0 [bond=1];
+C_0 -- H_1 [bond=1];
+C_0 -- C_1 [bond=2, label=2];
+C_1 -- H_2 [bond=1];
+C_1 -- H_3 [bond=1];
+}
+    """
+
+    return Response(dot_string, mimetype='text/plain')
 
 
 # --- 애플리케이션 실행 ---

@@ -1,5 +1,6 @@
 # lewis
 루이스 전자점 구조를 계산
+전체적인 개념은 https://en.wikipedia.org/wiki/Lewis_structure  참고 
 
 ## 환경 설정 (최초 1번만 하면 됨)
 - Python 최신 버전 설치하기 (버전 3.XX): https://www.python.org/downloads/windows/
@@ -73,6 +74,13 @@ O_0 -- C_0 [bond=2];
 C_0 -- O_1 [bond=2];
 }
 ```
+
+## WEB Server 띄우기
+- `python app.py` 로 실행
+- 브라우저에서 `http://localhost:5000` 으로 접속 
+- Web Server는 Flask로 개발됨
+- Web Server 본체는 app.py 에 정의됨
+- html 파일은 templates 디렉토리에 있음 
 
 ## 강화학습 환경 
 - OpenAI gymnasium 사용 

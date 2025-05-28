@@ -3,38 +3,101 @@
   <script src="https://unpkg.com/viz.js@2.1.2/viz.js"></script>
   <!-- Rendering engine -->
   <script src="https://unpkg.com/viz.js@2.1.2/full.render.js"></script>
-
 </head>
 <body>
 <h1>Lewis Dot Structure</h1>
-<div id="graph">
+<div class="input-group">
+    <label for="chemicalFormula">Input Formula:</label>
+    <input type="text" id="chemicalFormula" name="chemicalFormula" placeholder="Ex) CO2, H2O, N2">
+    <button onclick="fetchLewisStructure()">Show Structure</button>
+</div>
+<div id="loadingIndicator" style="display: none;">
+    <p>Calculating...</p>
+    <!-- 간단한 CSS 애니메이션 로더 추가 가능 -->
+    <div class="loader"></div>
+</div>
+
+<div id="lewisStructureContainer">
+</div>
+<pre id="dotContainer">
+
+</pre>
+
+<div id="errorMessages" style="color: red;">
+    <!-- 여기에 오류 메시지가 표시됩니다. -->
 </div>
 
 <script>
-    const dot = `
-strict graph {
-H_0 [label=H, lone_e=0];
-C_0 [label=C, lone_e=0];
-H_1 [label=H, lone_e=0];
-C_1 [label=C, lone_e=0];
-H_2 [label=H, lone_e=0];
-H_3 [label=H, lone_e=0];
-H_0 -- C_0 [bond=1];
-C_0 -- H_1 [bond=1];
-C_0 -- C_1 [bond=2, label=2];
-C_1 -- H_2 [bond=1];
-C_1 -- H_3 [bond=1];
-}
-`;
+async function fetchLewisStructure() {
+    const formulaInput = document.getElementById('chemicalFormula');
+    const formula = formulaInput.value.trim();
+    const structureContainer = document.getElementById('lewisStructureContainer');
+    const dotContainer = document.getElementById('dotContainer');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const errorMessagesDiv = document.getElementById('errorMessages');
 
-  const viz = new Viz();
-  viz.renderSVGElement(dot, {engine: "neato"})
-    .then(function (element) {
-      document.getElementById("graph").appendChild(element);
-    })
-    .catch(error => {
-      console.error(error);
-    });
+    // 이전 내용 초기화
+    structureContainer.innerHTML = '';
+    dotContainer.innerHTML = '';
+    errorMessagesDiv.innerHTML = ''; // 오류 메시지 초기화
+
+    if (!formula) {
+        errorMessagesDiv.textContent = 'Formular is empty.';
+        structureContainer.innerHTML = '';
+        return;
+    }
+
+    // 로딩 인디케이터 표시
+    loadingIndicator.style.display = 'block';
+
+    try {
+        // AJAX 요청 (Fetch API 사용)
+        // GET 요청이므로 URL에 파라미터를 포함합니다.
+        const response = await fetch(`/lewis?formula=${encodeURIComponent(formula)}`);
+
+        loadingIndicator.style.display = 'none'; // 로딩 인디케이터 숨기기
+
+        if (!response.ok) {
+            // HTTP 오류 응답 처리 (예: 404, 500)
+            let errorMessage = `Error: ${response.status} ${response.statusText}`;
+            // JSON 파싱 실패 시 일반 텍스트로 오류 메시지 시도
+            const textError = await response.text();
+            if (textError) errorMessage = textError;
+
+            errorMessagesDiv.textContent = errorMessage;
+            structureContainer.innerHTML = '<p>Failed to get Lewis Structure</p>';
+            console.error('Server error:', errorMessage);
+            return;
+        }
+
+        // 응답이 성공적인 경우
+        // 서버가 SVG 문자열을 직접 반환한다고 가정
+        const dotString = await response.text();
+
+        if (dotString) {
+          const viz = new Viz();
+          viz.renderSVGElement(dotString, {engine: "neato"})
+            .then(function (element) {
+              document.getElementById("lewisStructureContainer").innerHTML = '';
+              document.getElementById("lewisStructureContainer").appendChild(element);
+              document.getElementById("dotContainer").innerHTML = dotString;
+            })
+            .catch(error => {
+              console.error(error);
+            });
+        } else {
+            structureContainer.innerHTML = "<p>Can't calculate Lewis Strucutre.</p>";
+            errorMessagesDiv.textContent = '';
+        }
+
+    } catch (error) {
+        // 네트워크 오류 또는 기타 JavaScript 오류 처리
+        loadingIndicator.style.display = 'none';
+        structureContainer.innerHTML = '';
+        errorMessagesDiv.textContent = error.message;
+        console.error('Fetch error:', error);
+    }
+}
 
 </script>
 </body>
