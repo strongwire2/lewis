@@ -139,6 +139,10 @@ def combine_atoms(atoms, index, graph, structs):
             new_graph.add_edge(node, current_atom, bond=1)
             # 추가되는 노드와 연결되는 노드의 비공유전자 1개 줄임
             new_graph.nodes[node]['lone_e'] = new_graph.nodes[node].get('lone_e', 0)-1
+            # TODO: 여기서 new_graph.nodes[node].get('lone_e') < 0 이면 아래 재귀호출을 할 필요가 없다. 이미 규칙 위배. Pruning !!
+            if pruning(new_graph):
+                continue
+
             #print(f"  add new {current_atom}, {node}-{current_atom}")
             combine_atoms(atoms, index+1, new_graph, structs)
     else:
@@ -167,6 +171,13 @@ def traverse_lewis(formula):
         combine_atoms(perms, 0, graph, structs)
     return structs
 
+def pruning(graph):
+    '''
+    lone_e 값이 음수가 되는 순간 pruning 하기.
+    '''
+    for node in graph.nodes:
+        if graph.nodes[node].get('lone_e', 0) < 0:
+            return True
 
 def verify_bond(graph):
     """
@@ -244,6 +255,21 @@ def get_lewis_struct(formular):
             verified.append(g)
     return verified
 
+
+def annotate_lewis(graph):
+    """
+    DOT 그래프에서 노드 위에 비공유 전자 개수 출력하고(xlabel), 엣지에는 2중, 3중 결합 표시 추가
+    :param graph:
+    :return:
+    """
+    for node in graph.nodes:
+        if graph.nodes[node].get("lone_e") > 0:  # 비공유 전자 개수 표시
+            graph.nodes[node]['xlabel'] = graph.nodes[node].get("lone_e")
+    for u, v, data in graph.edges(data=True):
+        if data.get("bond") > 1:
+            graph[u][v]['label'] = data.get("bond")
+
+
 def test_fail_case():
     G = nx.Graph()
     G.add_node("O_0", label="O", lone_e=4)
@@ -265,13 +291,37 @@ if __name__ == '__main__':
     #print(parse_formula("O2Cu2O4"))
     #print(flatten_atom_counts(parse_formula("O2Cu2O4")))
 
-    #result = get_lewis_struct("H2O")  # 단일 결합
-    #result = get_lewis_struct("CH4")  # 비선형
-    #result = get_lewis_struct("CO2")  # 이중 결합
-    #result = get_lewis_struct("SO2")  # 확장옥텟
-    #result = get_lewis_struct("H2CO")  # 단일 결합+이중 결합, 포름알데히드
-    #result = get_lewis_struct("CNO")  # 단일 결합+이중 결합, 포름알데히드
-    result = get_lewis_struct("C2H2")  # 단일 결합+이중 결합, 포름알데히드
+    # result = get_lewis_struct("H2O")  # 단일 결합
+    # result = get_lewis_struct("CH4")
+    # result = get_lewis_struct("NH3")
+    # result = get_lewis_struct("HCl")
+    # result = get_lewis_struct("HF")
+    # result = get_lewis_struct("PH3")
+    # result = get_lewis_struct("SiH4")
+    # result = get_lewis_struct("C2H6")
+    # result = get_lewis_struct("C2H5Cl")
+    # result = get_lewis_struct("CH3Cl")
+    # result = get_lewis_struct("CH3OH")
+
+    # result = get_lewis_struct("NO2")  # 비선형 / NO2는 라디칼로 인해서 실패
+    # result = get_lewis_struct("H2S")
+    # result = get_lewis_struct("O3") #O3는 전자를 하나 주고 받는 방식이 구현이 안되어 있어 실패
+    # result = get_lewis_struct("ClO2") #ClO2는 라디칼로 인해서 실패
+    # result = get_lewis_struct("H2Se")
+    # result = get_lewis_struct("CH2Cl2")
+    # result = get_lewis_struct("CHCl3")
+
+    # result = get_lewis_struct("O2") # 이중 결합
+    # result = get_lewis_struct("CO2")
+    # result = get_lewis_struct("C2H4")
+    # result = get_lewis_struct("CH2O")
+    # result = get_lewis_struct("HCN")
+    # result = get_lewis_struct("CS2")
+
+    #result = get_lewis_struct("SF4") #확장된 옥텟
+    result = get_lewis_struct("NH3")
+
     for r in result:
+        annotate_lewis(r)
         dot = to_pydot(r)
         print(dot.to_string())
