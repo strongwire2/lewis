@@ -1,71 +1,100 @@
-import networkx as nx
-import random
+import gymnasium as gym
 import numpy as np
+import networkx as nx
+from gymnasium import spaces
 
-class LewisCO2Env:
-    def __init__(self):
-        self.reset()
+# 간단한 원자 정보: 기호, 원자가 전자 수
+ATOM_INFO = {
+    'H': {'valence': 1},
+    'O': {'valence': 2},
+    'C': {'valence': 4},
+    # 필요시 추가
+}
 
-    def reset(self):
+
+class LewisEnv(gym.Env):
+    def __init__(self, atoms=['O', 'H', 'H']):
+        self.atoms = atoms
+        self.num_atoms = len(atoms)
+        self.atom_data = [dict(symbol=s, valence=ATOM_INFO[s]['valence'], bonds=0) for s in atoms]
+
         self.graph = nx.Graph()
-        self.graph.add_node("C_0", label="C", lone_e=4)
-        self.graph.add_node("O_0", label="O", lone_e=6)
-        self.graph.add_node("O_1", label="O", lone_e=6)
-        self.graph.add_edge("C_0", "O_0", bond=1)
-        self.graph.add_edge("C_0", "O_1", bond=1)
-        self.total_valence_e = 16
-        return self._get_state()
+        self.remaining = list(range(self.num_atoms))
+        self.placed = []
 
-    def _get_state(self):
-        bonds = tuple((u, v, d["bond"]) for u, v, d in self.graph.edges(data=True))
-        lone_e = tuple((n, self.graph.nodes[n]["lone_e"]) for n in self.graph.nodes)
-        return (bonds, lone_e)
+        # Observation: adjacency matrix + atom valence status
+        self.observation_space = spaces.Dict({
+            'adj': spaces.Box(low=0, high=1, shape=(self.num_atoms, self.num_atoms), dtype=np.int32),
+            'valence': spaces.Box(low=0, high=4, shape=(self.num_atoms,), dtype=np.int32),
+            'mask': spaces.MultiBinary(self.num_atoms)
+        })
 
-    def _electron_count(self):
-        shared_e = sum(d['bond'] * 2 for _, _, d in self.graph.edges(data=True))
-        lone_e = sum(self.graph.nodes[n]['lone_e'] for n in self.graph.nodes)
-        return shared_e + lone_e
+        # Action: 선택할 원자 인덱스, 붙일 대상 인덱스
+        self.action_space = spaces.MultiDiscrete([self.num_atoms, self.num_atoms])
 
-    def _octet_penalty(self):
-        penalty = 0
-        for n in self.graph.nodes:
-            shared = sum(self.graph[u][v]['bond'] * 2 for u, v in self.graph.edges(n))
-            lone = self.graph.nodes[n]['lone_e']
-            total = shared + lone
-            if self.graph.nodes[n]['label'] == 'H':
-                penalty += abs(2 - total)
-            else:
-                penalty += abs(8 - total)
-        return penalty
+    def reset(self, seed=None, options=None):
+        super().reset(seed=seed)
+        self.graph.clear()
+        self.remaining = list(range(self.num_atoms))
+        self.placed = []
+        self.atom_data = [dict(symbol=s, valence=ATOM_INFO[s]['valence'], bonds=0) for s in self.atoms]
+
+        # 시작: 첫 원자 선택 (랜덤)
+        first = self.np_random.choice(self.remaining)
+        self.graph.add_node(first)
+        self.remaining.remove(first)
+        self.placed.append(first)
+
+        return self._get_obs(), {}
 
     def step(self, action):
-        # action: (u, v, +1|-1) -> modify bond
-        u, v, delta = action
-        if not self.graph.has_edge(u, v):
-            return self._get_state(), -1, False, {}
+        a_idx, b_idx = action
+        done = False
+        reward = 0.0
 
-        current_bond = self.graph[u][v]['bond']
-        new_bond = current_bond + delta
+        if a_idx not in self.remaining or b_idx not in self.placed:
+            reward = -1.0  # invalid action
+            done = True
+            return self._get_obs(), reward, done, False, {}
 
-        if not 0 < new_bond <= 3:
-            return self._get_state(), -1, False, {}
+        a = self.atom_data[a_idx]
+        b = self.atom_data[b_idx]
 
-        # adjust lone pairs accordingly
-        diff_e = delta * 2
-        if self.graph.nodes[u]['lone_e'] >= delta and self.graph.nodes[v]['lone_e'] >= delta:
-            self.graph[u][v]['bond'] = new_bond
-            self.graph.nodes[u]['lone_e'] -= delta
-            self.graph.nodes[v]['lone_e'] -= delta
-        else:
-            return self._get_state(), -1, False, {}
+        if a['bonds'] >= a['valence'] or b['bonds'] >= b['valence']:
+            reward = -1.0
+            done = True
+            return self._get_obs(), reward, done, False, {}
 
-        total_e = self._electron_count()
-        done = (total_e == self.total_valence_e and self._octet_penalty() == 0)
-        reward = -abs(self.total_valence_e - total_e) - self._octet_penalty()
-        return self._get_state(), reward, done, {}
+        self.graph.add_node(a_idx)
+        self.graph.add_edge(a_idx, b_idx)
+        a['bonds'] += 1
+        b['bonds'] += 1
+        self.remaining.remove(a_idx)
+        self.placed.append(a_idx)
 
-    def render(self):
-        for u, v, d in self.graph.edges(data=True):
-            print(f"{u} -- {v}, bond={d['bond']}")
-        for n in self.graph.nodes:
-            print(f"{n}: lone_e={self.graph.nodes[n]['lone_e']}")
+        if len(self.remaining) == 0:
+            done = True
+            reward = self._evaluate()
+
+        return self._get_obs(), reward, done, False, {}
+
+    def _get_obs(self):
+        adj = nx.to_numpy_array(self.graph, nodelist=list(range(self.num_atoms)), dtype=int)
+        valence = np.array([a['valence'] - a['bonds'] for a in self.atom_data])
+        mask = np.zeros(self.num_atoms, dtype=int)
+        mask[self.remaining] = 1
+        return {
+            'adj': adj,
+            'valence': valence,
+            'mask': mask
+        }
+
+    def _evaluate(self):
+        # 간단한 평가: 모든 원자가 valence 만족하면 1.0, 아니면 페널티
+        score = 0
+        for atom in self.atom_data:
+            if atom['bonds'] == atom['valence']:
+                score += 1
+            else:
+                score -= 1
+        return score / self.num_atoms

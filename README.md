@@ -74,3 +74,13 @@ C_0 -- O_1 [bond=2];
 }
 ```
 
+## 강화학습 환경 
+- OpenAI gymnasium 사용 
+- swig 설치 필요
+  - https://sourceforge.net/projects/swig/  에서 Download 버튼 눌러 `swigwin-4.3.1.zip` 파일 다운받기
+  - `swigwin-4.3.1.zip` 압축 풀기 
+  - 해당 디렉토리 기록. 예를 들어 c:\Users\user\Downloads\swigwin-4.3.1
+  - 윈도우 버튼 -> 환경 입력 -> 시스템 환경 변수 편집 선택 -> 환경 변수... 버튼 클릭 -> 윗쪽 네모에서 Path 선택 -> 편집... 클릭 -> 제일 아래에 아까 기록한 swigwin 디렉토리 입력 -> 확인 버튼 클릭
+  - 이후 PyCharm 죽이고, 새로 띄우기 
+  - PyCharm 터미널에서 (venv) 나오는지 확인하고, swig 쳤을때 에러 안나는지 확인 
+  - 이후 `pip install -r requirements.txt` 실행 
