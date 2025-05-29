@@ -4,6 +4,7 @@ import networkx as nx
 import pydot
 from networkx.drawing.nx_pydot import to_pydot, from_pydot
 from itertools import permutations
+import timeit
 
 # 옥텟 룰 기준 전자 수
 # TODO: 모든 원자에 대해 찾아서 추가할 것. 순서에 맞춰서
@@ -319,9 +320,14 @@ if __name__ == '__main__':
     # result = get_lewis_struct("CS2")
 
     #result = get_lewis_struct("SF4") #확장된 옥텟
-    result = get_lewis_struct("NH3")
+    result = get_lewis_struct("CH3COOH")
+    t = timeit.timeit(number=1)
+    t_total = 0
 
     for r in result:
         annotate_lewis(r)
         dot = to_pydot(r)
+        t_total += t
         print(dot.to_string())
+
+    print(t_total)

@@ -140,6 +140,8 @@ def combine_atoms(atoms, index, graph, structs):
             # 추가되는 노드와 연결되는 노드의 비공유전자 1개 줄임
             new_graph.nodes[node]['lone_e'] = new_graph.nodes[node].get('lone_e', 0)-1
             # TODO: 여기서 new_graph.nodes[node].get('lone_e') < 0 이면 아래 재귀호출을 할 필요가 없다. 이미 규칙 위배. Pruning !!
+            if pruning(new_graph):
+                continue
 
             #print(f"  add new {current_atom}, {node}-{current_atom}")
             combine_atoms(atoms, index+1, new_graph, structs)
@@ -169,6 +171,13 @@ def traverse_lewis(formula):
         combine_atoms(perms, 0, graph, structs)
     return structs
 
+def pruning(graph):
+    '''
+    lone_e 값이 음수가 되는 순간 pruning 하기.
+    '''
+    for node in graph.nodes:
+        if graph.nodes[node].get('lone_e', 0) < 0:
+            return True
 
 def verify_bond(graph):
     """
@@ -336,7 +345,7 @@ if __name__ == '__main__':
 
     # result = get_lewis_struct("O2") # 이중 결합
     # result = get_lewis_struct("CO2")
-    result = get_lewis_struct("C2H4")
+    #result = get_lewis_struct("C2H4")
     # result = get_lewis_struct("CH2O")
     # result = get_lewis_struct("HCN")
     # result = get_lewis_struct("CS2")
