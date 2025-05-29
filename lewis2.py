@@ -4,7 +4,7 @@ import networkx as nx
 import pydot
 from networkx.drawing.nx_pydot import to_pydot, from_pydot
 from itertools import permutations
-import timeit
+import time
 
 # 옥텟 룰 기준 전자 수
 # TODO: 모든 원자에 대해 찾아서 추가할 것. 순서에 맞춰서
@@ -124,6 +124,9 @@ def combine_atoms(atoms, index, graph, structs):
     :param structs: 완성된 그래프를 담을 배열
     :return:
     """
+    global total_atoms
+    total_atoms += 1
+
     if index >= len(atoms):
         structs.append(graph)
         return
@@ -141,9 +144,10 @@ def combine_atoms(atoms, index, graph, structs):
             # 추가되는 노드와 연결되는 노드의 비공유전자 1개 줄임
             new_graph.nodes[node]['lone_e'] = new_graph.nodes[node].get('lone_e', 0)-1
             # TODO: 여기서 new_graph.nodes[node].get('lone_e') < 0 이면 아래 재귀호출을 할 필요가 없다. 이미 규칙 위배. Pruning !!
+            '''
             if pruning(new_graph):
                 continue
-
+            '''
             #print(f"  add new {current_atom}, {node}-{current_atom}")
             combine_atoms(atoms, index+1, new_graph, structs)
     else:
@@ -293,16 +297,16 @@ if __name__ == '__main__':
     #print(flatten_atom_counts(parse_formula("O2Cu2O4")))
 
     # result = get_lewis_struct("H2O")  # 단일 결합
-    # result = get_lewis_struct("CH4")
-    # result = get_lewis_struct("NH3")
+    # result = get_lewis_struct("CH4")  //
+    # result = get_lewis_struct("NH3")  //
     # result = get_lewis_struct("HCl")
     # result = get_lewis_struct("HF")
     # result = get_lewis_struct("PH3")
     # result = get_lewis_struct("SiH4")
-    # result = get_lewis_struct("C2H6")
-    # result = get_lewis_struct("C2H5Cl")
+    # result = get_lewis_struct("C2H6")  //
+    # result = get_lewis_struct("C2H5Cl")  //
     # result = get_lewis_struct("CH3Cl")
-    # result = get_lewis_struct("CH3OH")
+    # result = get_lewis_struct("CH3OH")  //
 
     # result = get_lewis_struct("NO2")  # 비선형 / NO2는 라디칼로 인해서 실패
     # result = get_lewis_struct("H2S")
@@ -320,14 +324,15 @@ if __name__ == '__main__':
     # result = get_lewis_struct("CS2")
 
     #result = get_lewis_struct("SF4") #확장된 옥텟
+    total_atoms = 0
+    start = time.time()
     result = get_lewis_struct("CH3COOH")
-    t = timeit.timeit(number=1)
-    t_total = 0
 
     for r in result:
         annotate_lewis(r)
         dot = to_pydot(r)
-        t_total += t
         print(dot.to_string())
 
-    print(t_total)
+    end = time.time()
+    print("함수 수행 시간 : %f 초"%(end-start))
+    print("함수 연산 횟수 : %f 번"%(int(total_atoms)))
