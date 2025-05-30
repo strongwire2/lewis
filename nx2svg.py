@@ -20,11 +20,12 @@ def find_longest_path(G):
     return longest_path
 
 
-def add_dots(drawing, cx, cy, text_size, dot_count, loc):
+def add_dots(drawing, label, cx, cy, text_size, dot_count, loc):
     """
     비공유 전자를 그린다.
 
     :param drawing: drawSvg 객체
+    :param label: 원소기호
     :param cx: 텍스트 중심 좌표 x
     :param cy: 텍스트 중심 좌표 y
     :param text_size: 텍스트 크기
@@ -39,9 +40,13 @@ def add_dots(drawing, cx, cy, text_size, dot_count, loc):
             drawing.append(draw.Circle(cx + 3, cy - text_size / 2 - 4, 2))
     elif loc == 'r':
         # 오른쪽
-        drawing.append(draw.Circle(cx + text_size / 2 + 1, cy - 2 - 3, 2))
+        if len(label) == 1:
+            d = 1
+        else:
+            d = 5
+        drawing.append(draw.Circle(cx + text_size / 2 + d, cy - 2 - 3, 2))
         if dot_count == 2:
-            drawing.append(draw.Circle(cx + text_size / 2 + 1, cy - 2 + 3, 2))
+            drawing.append(draw.Circle(cx + text_size / 2 + d, cy - 2 + 3, 2))
     elif loc == 'b':
         # 아래쪽
         drawing.append(draw.Circle(cx - 3, cy + text_size / 2 + 1, 2))
@@ -49,9 +54,13 @@ def add_dots(drawing, cx, cy, text_size, dot_count, loc):
             drawing.append(draw.Circle(cx + 3, cy + text_size / 2 + 1, 2))
     elif loc == 'l':
         # 왼쪽
-        drawing.append(draw.Circle(cx - text_size / 2 - 1, cy - 2 - 3, 2))
+        if len(label) == 1:
+            d = 1
+        else:
+            d = 5
+        drawing.append(draw.Circle(cx - text_size / 2 - d, cy - 2 - 3, 2))
         if dot_count == 2:
-            drawing.append(draw.Circle(cx - text_size / 2 - 1, cy - 2 + 3, 2))
+            drawing.append(draw.Circle(cx - text_size / 2 - d, cy - 2 + 3, 2))
 
 
 def test_svg():
@@ -60,13 +69,14 @@ def test_svg():
 
     d = draw.Drawing(100, 100)
 
-    cx = 20
+    cx = 40
     cy = 30
-    d.append(draw.Text("H", text_size, cx, cy, center=True, dominant_baseline='middle'))
-    add_dots(d, cx, cy, text_size, 2, 't')
-    add_dots(d, cx, cy, text_size, 2, 'r')
-    add_dots(d, cx, cy, text_size, 2, 'b')
-    add_dots(d, cx, cy, text_size, 2, 'l')
+    label = "He"
+    d.append(draw.Text(label, text_size, cx, cy, center=True, dominant_baseline='middle', font_family='Times New Roman'))
+    add_dots(d, label, cx, cy, text_size, 2, 't')
+    add_dots(d, label, cx, cy, text_size, 2, 'r')
+    add_dots(d, label, cx, cy, text_size, 2, 'b')
+    add_dots(d, label, cx, cy, text_size, 2, 'l')
     d.save_svg('example.svg')
     #d.rasterize()  # Display as PNG
 
