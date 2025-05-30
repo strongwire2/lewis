@@ -63,6 +63,10 @@ def add_dots(drawing, label, cx, cy, text_size, dot_count, loc):
             drawing.append(draw.Circle(cx - text_size / 2 - d, cy - 2 + 3, 2))
 
 
+def add_bonds(drawing, label, cx, cy, text_size, bond_count, loc):
+    pass
+
+
 def test_svg():
     text_size = 24
     node_gap = 12
