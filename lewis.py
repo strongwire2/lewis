@@ -351,7 +351,7 @@ if __name__ == '__main__':
     # result = get_lewis_struct("CS2")
 
     #result = get_lewis_struct("SF4") #확장된 옥텟
-    #result = get_lewis_struct("CS2")
+    result = get_lewis_struct("CH3COOH")
 
     for r in result:
         annotate_lewis(r)

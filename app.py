@@ -27,7 +27,7 @@ def lewis():
     print(f"lewis request for {formula}")
 
     # TODO: 여기서 버전을 바꿀 수 있음. lewis 대신 lewis_fix 등.
-    from lewis import get_lewis_struct, annotate_lewis
+    from radical import get_lewis_struct, annotate_lewis
 
     result = get_lewis_struct(formula)
 

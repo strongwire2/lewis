@@ -167,7 +167,7 @@ def traverse_lewis(formula):
         combine_atoms(perms, 0, graph, structs)
     return structs
 
-'''
+
 def verify_bond(graph):
     """
     Octet Rule을 만족하는지 검증하고, 필요하면 이중/삼중 결합으로 업데이트
@@ -225,14 +225,13 @@ def verify_bond(graph):
 
     # 모든 원소에 대해 Octet Rule을 만족하므로 True 리턴
     return True
-'''
 
 
 def formal_charge(graph):
     fc_list = []
     for node in graph.nodes:
         label = graph.nodes[node].get('label')
-        V = graph.nodes[node].get(valence_electrons[label])
+        V = valence_electrons.get(label, 0)
         N = graph.nodes[node].get('lone_e', 0)
 
         # node에 연결된 edge를 모두 구함.
@@ -308,9 +307,10 @@ def get_lewis_struct(formular):
     for g in structs:
         #dot = to_pydot(g)
         #print(dot.to_string())
-        print(formal_charge(graph))
         if verify_bond(g):
             verified.append(g)
+
+        lewis_structure = gernerate_lewis()
     return verified
 
 
@@ -352,13 +352,14 @@ if __name__ == '__main__':
     #result = get_lewis_struct("H2S")
     #result = get_lewis_struct("O3") #O3는 전자를 하나 주고 받는 방식이 구현이 안되어 있어 실패
     #result = get_lewis_struct("ClO2") #ClO2는 라디칼로 인해서 실패
-    result = get_lewis_struct("H2O")
+    result = get_lewis_struct("CH4")
 
     #result = get_lewis_struct("HCOOH")  # 이중 결합
     #result = get_lewis_struct("SO2")  # 확장옥텟
     #result = get_lewis_struct("H2CO")  # 단일 결합+이중 결합, 포름알데히드
 
     for r in result:
-        print(formal_charge(r))
         dot = to_pydot(r)
         print(dot.to_string())
+        fc_list = formal_charge(r)
+        print("Formal charges:", fc_list)
