@@ -5,6 +5,7 @@ __pycache__/
 .idea/
 venv/
 .venv/
+example.svg
 
 # C extensions
 *.so
