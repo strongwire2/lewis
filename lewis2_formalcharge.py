@@ -238,7 +238,6 @@ def formal_charge(graph):
         edges = list(graph.edges(node, data=True))
         bond_count = 0  # bond의 수를 합한다.
         for u, v, data in edges:
-            # print(f"TEST {u} -- {v}, data: {data}")
             bond_count += data.get("bond", 1)
         B = bond_count
 
