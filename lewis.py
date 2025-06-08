@@ -113,6 +113,39 @@ def permutate_atoms(atoms):
     return perms_list
 
 
+def permutate_atoms_move_H_to_end(atoms):
+    """
+    ['H_0', 'H_1', 'C_0', 'O_0'] → H는 구분하지 않고 항상 마지막으로 보내고, 나머지만 순열 조합.
+
+    예:
+    input: ['H_0', 'H_1', 'C_0', 'O_0']
+    output:
+        [['C_0', 'O_0', 'H_0', 'H_1'], ['O_0', 'C_0', 'H_0', 'H_1']]
+    """
+    # 1. 원소 이름만 추출
+    element_ids = defaultdict(list)
+    for atom in atoms:
+        symbol, _ = atom.split('_')
+        element_ids[symbol].append(atom)
+
+    # 2. H를 제외한 다른 원소들만 추출
+    non_H_atoms = []
+    for symbol in element_ids:
+        if symbol != 'H':
+            non_H_atoms.extend(element_ids[symbol])
+
+    # 3. H 원자들 추출
+    h_atoms = element_ids['H']
+
+    # 4. non-H 순열 생성 (set으로 중복 제거)
+    perms = sorted(set(permutations(non_H_atoms)))
+
+    # 5. 각 순열 뒤에 H 원자들 고정 추가
+    result = [list(p) + h_atoms for p in perms]
+
+    return result
+
+
 def combine_atoms(atoms, index, graph, structs):
     """
     재귀를 돌면서 그래프의 노드와 엣지를 연결함.
@@ -139,7 +172,7 @@ def combine_atoms(atoms, index, graph, structs):
             new_graph.add_edge(node, current_atom, bond=1)
             # 추가되는 노드와 연결되는 노드의 비공유전자 1개 줄임
             new_graph.nodes[node]['lone_e'] = new_graph.nodes[node].get('lone_e', 0)-1
-            # TODO: 여기서 new_graph.nodes[node].get('lone_e') < 0 이면 아래 재귀호출을 할 필요가 없다. 이미 규칙 위배. Pruning !!
+            # 여기서 new_graph.nodes[node].get('lone_e') < 0 이면 아래 재귀호출을 할 필요가 없다. 이미 규칙 위배.
             if pruning(new_graph):
                 continue
 
@@ -186,9 +219,7 @@ def verify_bond(graph):
     :return True이면 Octet Rule 만족, False이면 만족하지 않음
     """
     for node in graph.nodes:
-        #print(graph.nodes[node].get('label'))
         label = graph.nodes[node].get('label')  # 원소기호
-        #print(graph.edges(node))
         ideal_valance = ideal_valence_electrons[label]  # 되어야 하는 원자가전자
 
         while True:
@@ -196,39 +227,31 @@ def verify_bond(graph):
             e_count = graph.nodes[node].get('lone_e')
             edges = list(graph.edges(node, data=True))
             for u, v, data in edges:
-                #print(f"TEST {u} -- {v}, data: {data}")
                 e_count += data.get("bond", 1)*2  # 공유 전자쌍이므로 연결당 2개의 전자임.
             # Octet Rule이 안맞으면 False 리턴
             if e_count != ideal_valance:  # octet rule 안맞으면
                 something_changed = False
                 for u, v, data in edges:
                     other = v if u == node else u  # edge에 연결된 상대편 other node를 구함
-                    #print(f"{node} -- {other}, data: {data}")
                     if graph.nodes[other].get('lone_e') > 0 and graph.nodes[node].get('lone_e') > 0:  # 공유할 전자가 있으면
-                        #print(f"adjust {graph.nodes[node].get('lone_e')} - {graph.nodes[other].get('lone_e')}")
                         graph.nodes[other]['lone_e'] = graph.nodes[other].get('lone_e')-1
                         graph.nodes[node]['lone_e'] = graph.nodes[node].get('lone_e')-1
-                        #print(f"==> after {graph.nodes[node].get('lone_e')} - {graph.nodes[other].get('lone_e')}")
                         graph[node][other]['bond'] = graph[node][other].get('bond', 1) + 1
                         something_changed = True  # 공유하는 등의 변화가 있으면 체크
                 if not something_changed:  # 변화 없으면 답이 없는 것임
-                    #print("Nothing changed")
                     return False
             else:
                 break
 
     # bond수 맞추는 과정에서 잘 맞추어 놓은 Octet Rule이 깨질 수 있으므로 다시 체크
     for node in graph.nodes:
-        #print(graph.nodes[node].get('label'))
         label = graph.nodes[node].get('label')  # 원소기호
-        #print(graph.edges(node))
         ideal_valance = ideal_valence_electrons[label]  # 되어야 하는 원자가전자
 
         # 남아있는 비공유 전자 개수와 edge의 bond 수를 합쳐서 Octet Rule을 만족하는지 확인
         e_count = graph.nodes[node].get('lone_e')
         edges = list(graph.edges(node, data=True))
         for u, v, data in edges:
-            #print(f"TEST {u} -- {v}, data: {data}")
             e_count += data.get("bond", 1)*2  # 공유 전자쌍이므로 연결당 2개의 전자임.
         # Octet Rule이 안맞으면 False 리턴
         if e_count != ideal_valance:  # octet rule 안맞으면
@@ -274,7 +297,6 @@ def annotate_lewis(graph):
 def are_graphs_equivalent(g1, g2):
     """
     두 그래프가 같은지 비교함. Node는 ID가 아니라 label을 기준으로 하고, Edge는 bond 수를 고려함.
-    정확하지 않음... 수정 필요.
 
     :param g1:
     :param g2:
@@ -322,7 +344,7 @@ if __name__ == '__main__':
     #print(parse_formula("Cu2O4"))
     #print(parse_formula("O2Cu2O4"))
     #print(flatten_atom_counts(parse_formula("O2Cu2O4")))
-
+    print(permutate_atoms_move_H_to_end(['H_0', 'H_1', 'C_0', 'O_0']))
     # result = get_lewis_struct("H2O")  # 단일 결합
     # result = get_lewis_struct("CH4")
     # result = get_lewis_struct("NH3")
@@ -333,7 +355,7 @@ if __name__ == '__main__':
     # result = get_lewis_struct("C2H6")
     # result = get_lewis_struct("C2H5Cl")
     # result = get_lewis_struct("CH3Cl")
-    # result = get_lewis_struct("CH3OH")
+    #result = get_lewis_struct("CH3OH")
 
     # result = get_lewis_struct("NO2")  # 비선형 / NO2는 라디칼로 인해서 실패
     # result = get_lewis_struct("H2S")
@@ -345,17 +367,17 @@ if __name__ == '__main__':
 
     # result = get_lewis_struct("O2") # 이중 결합
     # result = get_lewis_struct("CO2")
-    #result = get_lewis_struct("C2H4")
+    # result = get_lewis_struct("C2H4")
     # result = get_lewis_struct("CH2O")
     # result = get_lewis_struct("HCN")
     # result = get_lewis_struct("CS2")
 
     #result = get_lewis_struct("SF4") #확장된 옥텟
-    result = get_lewis_struct("CH3COOH")
+    #result = get_lewis_struct("CH3COOH")
 
-    for r in result:
-        annotate_lewis(r)
-        dot = to_pydot(r)
-        print(dot.to_string())
+    #for r in result:
+    #    annotate_lewis(r)
+    #    dot = to_pydot(r)
+    #    print(dot.to_string())
 
     #print(are_graphs_equivalent(result[0], result[1]))

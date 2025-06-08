@@ -5,8 +5,7 @@ import pydot
 from networkx.drawing.nx_pydot import to_pydot, from_pydot
 from itertools import permutations
 
-# 옥텟 룰 기준 전자 수
-# TODO: 모든 원자에 대해 찾아서 추가할 것. 순서에 맞춰서
+# 옥텟 룰 기준 전자 수. 배열로 처리하여 확장옥텟을 구현함.
 ideal_valence_electrons = { 'H': [2], 'He': [2], 'Li': [8], 'Be': [4],
                             'B': [6], 'C': [8], 'N': [8], 'O': [8], 'F': [8],
                             'Ne': [8], 'Na': [8], 'Mg': [8], 'Al': [8],
